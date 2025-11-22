@@ -439,7 +439,6 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
                         }`}
                       >
                         <p className="text-sm">
-                          {isYou ? "" : ""}
                           {message.message_text}
                         </p>
                       </div>
