@@ -58,6 +58,29 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
     // Load existing messages
     loadMessages();
 
+    // Fallback polling to ensure messages are received
+    let pollInterval: number | null = null;
+    let lastMessageCount = 0;
+
+    const pollForNewMessages = async () => {
+      if (!chatSession) return;
+      
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("chat_session_id", chatSession.id)
+        .order("sent_at", { ascending: true });
+
+      if (!error && data) {
+        const currentCount = messages.length;
+        if (data.length > currentCount) {
+          console.log(`Polling found ${data.length - currentCount} new messages`);
+          setMessages(data);
+        }
+        lastMessageCount = data.length;
+      }
+    };
+
     // Subscribe to new messages
     const channel = supabase
       .channel(`chat_${chatSession.id}`)
@@ -70,18 +93,56 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
           filter: `chat_session_id=eq.${chatSession.id}`,
         },
         (payload) => {
+          console.log("New message received via real-time:", payload);
           const newMessage = payload.new as Message;
           setMessages((prev) => {
-            // Avoid duplicates
+            // Check if this is a real message replacing a temporary one
+            const tempMessageIndex = prev.findIndex(m => 
+              m.sender_id === newMessage.sender_id && 
+              m.message_text === newMessage.message_text &&
+              m.id.startsWith('temp_')
+            );
+            
+            if (tempMessageIndex !== -1) {
+              // Replace temporary message with real one
+              const updated = [...prev];
+              updated[tempMessageIndex] = newMessage;
+              console.log("Replacing temporary message with real message:", newMessage);
+              return updated;
+            }
+            
+            // Avoid duplicates for real messages
             if (prev.some(m => m.id === newMessage.id)) return prev;
+            
+            console.log("Adding new message to state:", newMessage);
             return [...prev, newMessage];
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Real-time subscription status:", status);
+        if (status === 'SUBSCRIBED') {
+          console.log("Successfully subscribed to real-time updates");
+        } else if (status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.log("Real-time subscription failed, starting fallback polling");
+          // Start fallback polling if real-time fails
+          pollInterval = window.setInterval(pollForNewMessages, 3000);
+        }
+      });
+
+    // Start fallback polling after 5 seconds if no real-time updates received
+    const fallbackTimeout = setTimeout(() => {
+      if (pollInterval === null) {
+        console.log("No real-time updates received, starting fallback polling");
+        pollInterval = window.setInterval(pollForNewMessages, 3000);
+      }
+    }, 5000);
 
     return () => {
+      console.log("Cleaning up subscription and polling");
       supabase.removeChannel(channel);
+      if (pollInterval) clearInterval(pollInterval);
+      clearTimeout(fallbackTimeout);
     };
   }, [chatSession]);
 
@@ -145,6 +206,19 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !isConnected || !chatSession) return;
 
+    const messageText = inputMessage.trim();
+    setInputMessage(""); // Clear input immediately for better UX
+
+    // Optimistically add message to local state
+    const tempMessage: Message = {
+      id: `temp_${Date.now()}`, // Temporary ID
+      sender_id: userId,
+      message_text: messageText,
+      sent_at: new Date().toISOString(),
+    };
+    
+    setMessages(prev => [...prev, tempMessage]);
+
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-1b522738/message/send`,
@@ -157,20 +231,24 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
           body: JSON.stringify({
             chatSessionId: chatSession.id,
             senderId: userId,
-            messageText: inputMessage,
+            messageText: messageText,
           }),
         }
       );
 
       const data = await response.json();
 
-      if (data.success) {
-        setInputMessage("");
-      } else {
+      if (!data.success) {
         console.error("Error sending message:", data.error);
+        // Remove the temporary message if sending failed
+        setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+        setInputMessage(messageText); // Restore the message text
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      // Remove the temporary message if sending failed
+      setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+      setInputMessage(messageText); // Restore the message text
     }
   };
 
