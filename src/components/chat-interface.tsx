@@ -2,16 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card } from "./ui/card";
-import { 
-  Video, 
-  VideoOff, 
-  Mic, 
-  MicOff, 
-  SkipForward, 
-  X, 
-  Send,
-  Loader2 
-} from "lucide-react";
+import { SkipForward, X, Send } from "lucide-react";
 import { createClient } from "../utils/supabase/client";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 
@@ -39,8 +30,6 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [isSearching, setIsSearching] = useState(true);
-  const [videoEnabled, setVideoEnabled] = useState(true);
-  const [audioEnabled, setAudioEnabled] = useState(true);
   const [chatSession, setChatSession] = useState<ChatSession | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchIntervalRef = useRef<number | null>(null);
@@ -302,113 +291,9 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
           </Button>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-4">
-          {/* Video Chat Section */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Stranger's Video */}
-            <Card className="relative aspect-video bg-gray-900 overflow-hidden">
-              {isSearching ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center space-y-4">
-                    <Loader2 className="w-12 h-12 text-white animate-spin mx-auto" />
-                    <p className="text-white">Looking for someone to chat with...</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-900 to-indigo-900">
-                  <div className="text-center space-y-2">
-                    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto">
-                      <Video className="w-12 h-12 text-white" />
-                    </div>
-                    <p className="text-white">Stranger's Video</p>
-                    <p className="text-sm text-white/70">(Video feed would display here)</p>
-                  </div>
-                </div>
-              )}
-              {isConnected && (
-                <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
-                  ● LIVE
-                </div>
-              )}
-            </Card>
-
-            {/* Your Video */}
-            <Card className="relative aspect-video bg-gray-800 overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-900 to-cyan-900">
-                <div className="text-center space-y-2">
-                  {videoEnabled ? (
-                    <>
-                      <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto">
-                        <Video className="w-10 h-10 text-white" />
-                      </div>
-                      <p className="text-white">Your Video</p>
-                      <p className="text-sm text-white/70">(Your camera feed would display here)</p>
-                    </>
-                  ) : (
-                    <>
-                      <VideoOff className="w-20 h-20 text-white/70 mx-auto" />
-                      <p className="text-white/70">Camera Off</p>
-                    </>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            {/* Controls */}
-            <div className="flex items-center justify-center gap-4">
-              <Button
-                variant={videoEnabled ? "default" : "destructive"}
-                size="lg"
-                onClick={() => setVideoEnabled(!videoEnabled)}
-                className="gap-2"
-              >
-                {videoEnabled ? (
-                  <>
-                    <Video className="w-5 h-5" />
-                    Video On
-                  </>
-                ) : (
-                  <>
-                    <VideoOff className="w-5 h-5" />
-                    Video Off
-                  </>
-                )}
-              </Button>
-
-              <Button
-                variant={audioEnabled ? "default" : "destructive"}
-                size="lg"
-                onClick={() => setAudioEnabled(!audioEnabled)}
-                className="gap-2"
-              >
-                {audioEnabled ? (
-                  <>
-                    <Mic className="w-5 h-5" />
-                    Audio On
-                  </>
-                ) : (
-                  <>
-                    <MicOff className="w-5 h-5" />
-                    Audio Off
-                  </>
-                )}
-              </Button>
-
-              <Button
-                variant="secondary"
-                size="lg"
-                onClick={handleSkip}
-                disabled={isSearching}
-                className="gap-2"
-              >
-                <SkipForward className="w-5 h-5" />
-                Next
-              </Button>
-            </div>
-          </div>
-
-          {/* Text Chat Section */}
-          <div className="lg:col-span-1">
+        <div className="grid lg:grid-cols-2 gap-4 justify-items-center">
+          {/* Text Chat Section only */}
+          <div className="lg:col-span-1 lg:max-w-2xl w-full">
             <Card className="h-[calc(100vh-12rem)] flex flex-col">
               <div className="p-4 border-b">
                 <h2>Text Chat</h2>
@@ -465,6 +350,15 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
                     size="icon"
                   >
                     <Send className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={handleSkip}
+                    disabled={isSearching}
+                    className="gap-2"
+                  >
+                    <SkipForward className="w-5 h-5" />
+                    Next
                   </Button>
                 </div>
               </div>

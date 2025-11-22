@@ -1,5 +1,5 @@
 import { Button } from "./ui/button";
-import { Video, MessageSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
 interface LandingProps {
   onStartChat: () => void;
@@ -12,31 +12,19 @@ export function Landing({ onStartChat }: LandingProps) {
         <div className="space-y-4">
           <h1 className="text-6xl">RandomChat</h1>
           <p className="text-xl text-gray-600">
-            Talk to strangers instantly. Video chat and text with random people from around the world.
+            Talk to strangers instantly with anonymous text chat from around the world.
           </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-6 border-2 border-gray-200 rounded-xl space-y-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                <Video className="w-6 h-6 text-blue-600" />
-              </div>
-              <h3>Video Chat</h3>
-              <p className="text-gray-600 text-sm">
-                Connect face-to-face with random strangers via webcam
-              </p>
+          <div className="p-6 border-2 border-gray-200 rounded-xl space-y-3 max-w-md mx-auto">
+            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto">
+              <MessageSquare className="w-6 h-6 text-indigo-600" />
             </div>
-
-            <div className="p-6 border-2 border-gray-200 rounded-xl space-y-3">
-              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto">
-                <MessageSquare className="w-6 h-6 text-indigo-600" />
-              </div>
-              <h3>Text Chat</h3>
-              <p className="text-gray-600 text-sm">
-                Chat anonymously with people using the text box
-              </p>
-            </div>
+            <h3>Text Chat</h3>
+            <p className="text-gray-600 text-sm">
+              Chat anonymously with random people using a simple text interface.
+            </p>
           </div>
 
           <Button 
