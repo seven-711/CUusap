@@ -1,6 +1,3 @@
-// Development fallback values (uncomment for local testing if needed)
-// export const projectId = "adnejfsqtadgitqymloj";
-// export const publicAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkbmVqZnNxdGFkZ2l0cXltbG9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Nzk5MjMsImV4cCI6MjA3OTM1NTkyM30.zOhUqOuHaApYexqH6tibAUTcGXMLVybPTC2Arj7MrXk";
 
 // Type definition for Vite environment variables
 interface ImportMetaEnv {

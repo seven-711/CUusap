@@ -31,6 +31,7 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [isSearching, setIsSearching] = useState(true);
   const [chatSession, setChatSession] = useState<ChatSession | null>(null);
+  const [strangerUsername, setStrangerUsername] = useState<string>("Stranger");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchIntervalRef = useRef<number | null>(null);
   const supabase = createClient();
@@ -187,6 +188,19 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
           setIsSearching(false);
           setIsConnected(true);
           setChatSession(data.chatSession);
+          // Fetch stranger username
+          const strangerId = data.chatSession.user1_id === userId ? data.chatSession.user2_id : data.chatSession.user1_id;
+          try {
+            const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-1b522738/user/${strangerId}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${publicAnonKey}`
+              }
+            });
+            const json = await response.json();
+            if (json.success && json.user) setStrangerUsername(json.user.username || "Stranger");
+          } catch(e) { console.error("Fetch stranger username error", e);}
           if (searchIntervalRef.current) {
             clearInterval(searchIntervalRef.current);
           }
@@ -354,7 +368,7 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h1 className="text-3xl">RandomChat</h1>
+            <h1 className="text-3xl" style={{fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: 'red'}}>CU-usap</h1>
             <p className="text-sm text-gray-600">
               {isSearching ? "Searching for a stranger..." : isConnected ? "Connected to: Stranger" : "Disconnected"}
             </p>
@@ -374,7 +388,7 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
           <div className="lg:col-span-1 lg:max-w-2xl w-full">
             <Card className="h-[calc(100vh-12rem)] flex flex-col">
               <div className="p-4 border-b">
-                <h2>Text Chat</h2>
+                <h2>{strangerUsername}</h2>
                 <p className="text-sm text-gray-500">
                   {isConnected ? "You can type here" : "Waiting for connection..."}
                 </p>
@@ -426,6 +440,7 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
                     onClick={handleSendMessage}
                     disabled={!isConnected || !inputMessage.trim()}
                     size="icon"
+                    style={{background: 'linear-gradient(to right, rgb(220 38 38), rgb(236 72 153))', color: 'white' }}
                   >
                     <Send className="w-4 h-4" />
                   </Button>
@@ -434,6 +449,7 @@ export function ChatInterface({ onDisconnect, userId }: ChatInterfaceProps) {
                     onClick={handleSkip}
                     disabled={isSearching}
                     className="gap-2"
+                    style={{background: 'linear-gradient(to right, rgb(220 38 38), rgb(236 72 153))', color: 'white'}}
                   >
                     <SkipForward className="w-5 h-5" />
                     Next

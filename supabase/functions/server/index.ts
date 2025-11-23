@@ -1,7 +1,7 @@
 import { Hono } from "npm:hono@4.6.14";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const app = new Hono();
 
@@ -328,6 +328,28 @@ app.post("/make-server-1b522738/user/online", async (c: any) => {
     return c.json({ success: true });
   } catch (error) {
     console.error("Error in /user/online:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// Get user by ID
+app.get("/make-server-1b522738/user/:userId", async (c: any) => {
+  try {
+    const { userId } = c.req.param();
+    
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("id, username, session_id")
+      .eq("id", userId)
+      .single();
+    
+    if (error || !user) {
+      return c.json({ success: false, error: "User not found" }, 404);
+    }
+    
+    return c.json({ success: true, user });
+  } catch (error) {
+    console.error("Error in /user/:userId:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
